@@ -1,0 +1,30 @@
+{
+    "name": "wechat-bot",
+    "version": "1.0.0",
+    "description": "",
+    "main": "dist/main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "tsx src/main.ts",
+        "build": "tsc",
+        "start": "node dist/main.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "module",
+    "imports": {
+        "#util/*": "./dist/util/*.js"
+    },
+    "dependencies": {
+        "brolog": "^1.14.2",
+        "file-box": "^1.4.15",
+        "sherpa-onnx-node": "^1.13.4",
+        "wechaty": "^1.20.2"
+    },
+    "devDependencies": {
+        "@types/node": "^26.1.1",
+        "tsx": "^4.23.1",
+        "typescript": "^7.0.2"
+    }
+}
