@@ -19,6 +19,7 @@ const AUDIO_INPUT_PREFIX = "[User sent a voice message. Transcription]: "
  * Configuration options for {@link AudioRecognitionClient}.
  */
 type AudioRecognitionClientOptions = {
+
     /**
      * Conversation used by the audio recognition client.
      *
@@ -58,6 +59,7 @@ type AudioRecognitionClientOptions = {
  */
 export class AudioRecognitionClient extends Client
 {
+    
     /**
      * Speech-to-text component used to transcribe audio sample data.
      */

@@ -23,6 +23,7 @@ import type { Data } from "../util/Conversation.js"
  */
 export class StandardStream extends IOStream
 {
+    
     /**
      * Readable source used for console input.
      *

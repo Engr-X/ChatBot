@@ -17,6 +17,7 @@ import type { Client } from "../client/Client.js"
  */
 export class SingleClientAgent extends Agent
 {
+    
     /**
      * Preconfigured console agent intended for local development and manual
      * testing.
@@ -66,7 +67,7 @@ export class SingleClientAgent extends Agent
     }
 
 
-     /**
+    /**
      * Generates an assistant response using the configured client.
      *
      * Processing sequence:

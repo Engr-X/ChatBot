@@ -22,6 +22,7 @@ import type { Data } from "../util/Conversation.js"
  */
 export abstract class IOStream
 {
+    
     /**
      * Reads one data item from the input side of the stream.
      *

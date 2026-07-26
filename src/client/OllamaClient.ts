@@ -11,6 +11,7 @@ import type { Data } from "../util/Conversation.js"
  * Configuration options for {@link OllamaClient}.
  */
 type OllamaClientOptions = {
+    
     /**
      * Base URL of the Ollama HTTP API.
      *
@@ -91,6 +92,7 @@ const DEFAULT_MODEL = "qwen3.5:4b"
  */
 export class OllamaClient extends Client
 {
+
     /**
      * Base URL used for Ollama HTTP requests.
      *

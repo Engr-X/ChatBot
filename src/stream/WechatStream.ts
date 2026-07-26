@@ -43,6 +43,7 @@ type ReadResolver = (data: Data | null) => void
  */
 export class WechatStream extends IOStream
 {
+    
     /**
      * Wechaty bot instance used to locate contacts and send messages.
      */

@@ -18,6 +18,7 @@ import { ROLE_ASSISTANT } from "../util/Misc.js"
  */
 export class TestClient extends Client
 {
+    
     /**
      * Creates a deterministic test client.
      *

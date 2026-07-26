@@ -17,6 +17,7 @@ import type { Client } from "../client/Client.js"
  */
 export class ChatAgent extends Agent
 {
+    
     /**
      * Client responsible for preprocessing audio input.
      *

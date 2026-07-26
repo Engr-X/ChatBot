@@ -18,6 +18,7 @@ import type { IOStream } from "../stream/IOStream.js"
  */
 export abstract class Agent
 {
+    
     /**
      * Human-readable name of this agent.
      *
