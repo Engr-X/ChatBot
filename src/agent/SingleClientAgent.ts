@@ -1,10 +1,7 @@
-import type { WechatyInterface } from "wechaty/impls"
-
 import type { Client } from "../client/Client.js"
 import { OllamaClient } from "../client/OllamaClient.js"
 import type { Message } from "../util/Conversation.js"
 import { STANDARD_STREAM } from "../stream/StandardStream.js"
-import { WechatStream } from "../stream/WechatStream.js"
 import type { IOStream } from "../stream/IOStream.js"
 import { Agent } from "./Agent.js"
 
@@ -12,22 +9,11 @@ import { Agent } from "./Agent.js"
 export class SingleClientAgent extends Agent
 {
     static readonly CONSOLE_AGENT = new SingleClientAgent(
-        "Murphy",
+        "Console",
         STANDARD_STREAM,
         new OllamaClient("Murphy"),
-        10,
+        5,
     )
-
-
-    static getWeichatBot(bot: WechatyInterface, contactId: string, oppositeName: string = contactId): SingleClientAgent
-    {
-        return new SingleClientAgent(
-            contactId,
-            new WechatStream(bot, contactId),
-            new OllamaClient(oppositeName),
-            10,
-        )
-    }
 
 
     constructor(name: string, stream: IOStream, client: Client, timeIntervalSeconds: number)

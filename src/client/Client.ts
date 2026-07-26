@@ -5,12 +5,14 @@ import type { Message } from "../util/Conversation.js"
 export abstract class Client
 {
     private readonly oppositeName: string
+    private readonly prompt: string
     private readonly conversation: Conversation
 
 
-    constructor(oppositeName: string, conversation: Conversation = new Conversation(oppositeName))
+    constructor(oppositeName: string, prompt: string = "", conversation: Conversation = new Conversation(oppositeName))
     {
         this.oppositeName = oppositeName
+        this.prompt = prompt
         this.conversation = conversation
     }
 
@@ -20,7 +22,10 @@ export abstract class Client
 
     protected getPrompt(): string
     {
-        return `The person on the other side is named: ${this.oppositeName}. `
+        return [
+            `The person on the other side is named: ${this.oppositeName}.`,
+            this.prompt,
+        ].filter(part => part.trim().length > 0).join(" ")
     }
 
 

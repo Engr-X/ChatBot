@@ -57,16 +57,18 @@ export class AudioData
 
     readonly input_audio:
     {
-        data: string
+        samples: Float32Array
+        sampleRate: number
         format: string
     }
 
 
-    constructor(data: string, format: string)
+    constructor(samples: Float32Array, sampleRate: number, format: string = "f32")
     {
         this.input_audio =
         {
-            data,
+            samples,
+            sampleRate,
             format,
         }
     }

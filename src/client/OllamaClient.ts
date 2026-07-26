@@ -9,41 +9,28 @@ import { Client } from "./Client.js"
 type OllamaClientOptions = {
     baseUrl?: string
     model?: string
-    systemPrompt?: string
+    prompt?: string
+    temperature?: number
 }
 
 
 const DEFAULT_BASE_URL = "http://127.0.0.1:11434"
 const DEFAULT_MODEL = "qwen3.5:4b"
-const DEFAULT_SYSTEM_PROMPT = [
-    "You are an auto-reply assistant for private WeChat chats.",
-    "Reply in natural, sincere, concise Chinese.",
-    "Prioritize empathy. Do not lecture or sound stiff.",
-    "Do not say that you are a large language model.",
-    "Do not output your thinking process.",
-    "Use some internet slang naturally.",
-].join(" ")
 
 
 export class OllamaClient extends Client
 {
     private readonly baseUrl: string
     private readonly model: string
-    private readonly systemPrompt: string
+    private readonly temperature: number | undefined
 
-
+    
     constructor(oppositeName: string, options: OllamaClientOptions = {})
     {
-        super(oppositeName)
+        super(oppositeName, options.prompt)
         this.baseUrl = options.baseUrl ?? process.env.OLLAMA_BASE_URL ?? DEFAULT_BASE_URL
         this.model = options.model ?? process.env.OLLAMA_MODEL ?? DEFAULT_MODEL
-        this.systemPrompt = options.systemPrompt ?? this.getPrompt()
-    }
-
-
-    protected override getPrompt(): string
-    {
-        return super.getPrompt() + DEFAULT_SYSTEM_PROMPT
+        this.temperature = options.temperature
     }
 
 
@@ -56,12 +43,7 @@ export class OllamaClient extends Client
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                model: this.model,
-                messages,
-                stream: false,
-                think: false,
-            }),
+            body: JSON.stringify(this.createRequestBody(messages)),
         })
 
         if (!response.ok)
@@ -74,6 +56,18 @@ export class OllamaClient extends Client
             return null
 
         return new Message(ROLE_ASSISTANT).addData(new TextData(content))
+    }
+
+
+    private createRequestBody(messages: ReturnType<OllamaClient["toOllamaMessages"]>)
+    {
+        return {
+            model: this.model,
+            messages,
+            stream: false,
+            think: false,
+            ...(this.temperature === undefined ? {} : { options: { temperature: this.temperature } }),
+        }
     }
 
 

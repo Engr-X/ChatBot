@@ -33,6 +33,7 @@ export class ConversationManager
         switch (data.type)
         {
             case "text":
+            case "input_audio":
             {
                 received = agent.receiveData(data)
                 break
@@ -40,7 +41,6 @@ export class ConversationManager
 
             case "image_url":
             case "video_url":
-            case "input_audio":
             case "input_file":
             default:
                 break

@@ -4,7 +4,7 @@ import { join, resolve } from "node:path"
 import process from "node:process"
 
 
-type Waveform = {
+export type Waveform = {
     samples: Float32Array
     sampleRate: number
 }
@@ -102,10 +102,7 @@ export class AudioTranscriber
 
     async transcribeFile(audioPath: string): Promise<string>
     {
-        const filePath = resolve(audioPath)
-        this.assertFileExists(filePath, "audio file")
-
-        const wave = sherpaOnnx.readWave(filePath)
+        const wave = readWaveFile(audioPath)
         return this.transcribeSamples(wave.samples, wave.sampleRate)
     }
 
@@ -176,4 +173,15 @@ export class AudioTranscriber
 export async function audioToText(audioPath: string, options: AudioTranscriberOptions = {}): Promise<string>
 {
     return new AudioTranscriber(options).transcribeFile(audioPath)
+}
+
+
+export function readWaveFile(audioPath: string): Waveform
+{
+    const filePath = resolve(audioPath)
+
+    if (!existsSync(filePath))
+        throw new Error(`audio file not found: ${filePath}`)
+
+    return sherpaOnnx.readWave(filePath)
 }
