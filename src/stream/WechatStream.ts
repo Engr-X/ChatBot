@@ -21,7 +21,7 @@ export class WechatStream extends IOStream
     private closed: boolean
 
 
-    constructor(bot: WechatyInterface, contactId: string, replyPrefix: string = "[AI 回复]: ")
+    constructor(bot: WechatyInterface, contactId: string, replyPrefix: string = "[AI 自动回复]: ")
     // constructor(bot: WechatyInterface, contactId: string, replyPrefix: string = "")
     {
         super()

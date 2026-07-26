@@ -1,255 +1,362 @@
 # WeChat Bot
 
-一个基于 Wechaty、Ollama 和本地 Agent 架构的微信私聊自动回复机器人。
+A local WeChat private-chat auto-reply bot built with Wechaty, Ollama, and a small Agent/Client pipeline.
 
-当前主流程：
+The project is designed around typed message data. Text, audio, images, videos, and files can all be represented as `Data`, while individual clients can transform or answer those messages. The current production path focuses on private WeChat text/audio replies.
+
+## Features
+
+- Listens to WeChat private chat messages through Wechaty.
+- Skips group chats, official accounts, and non-individual conversations.
+- Keeps an independent conversation and agent per contact.
+- Batches messages by contact and replies on a fixed interval.
+- Uses Ollama for local LLM replies.
+- Uses `sherpa-onnx-node` with SenseVoice for local speech-to-text.
+- Converts WeChat voice messages into `AudioData`, then into text before sending the conversation to Ollama.
+- Splits long text replies into multiple WeChat messages by punctuation.
+- Uses `brolog` with compact log formatting.
+- Includes a console test mode that does not require WeChat login.
+
+Current WeChat reply pipeline:
 
 ```text
-微信私聊消息
--> Wechaty message event
+Wechaty message event
 -> Data
 -> ConversationManager
--> SingleClientAgent
+-> ChatAgent
+-> shared Conversation
+-> AudioRecognitionClient
 -> OllamaClient
 -> WechatStream
--> 微信回复
+-> WeChat reply
 ```
 
-## 功能
-
-- 监听微信私聊文本消息
-- 跳过群聊、公众号等非个人会话
-- 按联系人维护独立 Agent 和对话历史
-- 每隔固定时间批量处理同一个人的消息
-- 使用本地 Ollama 模型生成回复
-- 回复文本会按标点拆分成多条微信消息
-- 预留图片、语音、文件等 `Data` 类型
-- 已加入本地语音转文字工具类 `AudioTranscriber`
-
-## 环境要求
+## Requirements
 
 - Node.js 20+
 - npm
 - Ollama
-- 一个可用的 Ollama 模型，例如：
+- ffmpeg, required for converting WeChat audio to wav
+- 7-Zip on Windows if you use `build.bat` to extract the SenseVoice `.tar.bz2` model
 
-```powershell
-ollama pull qwen3.5:4b
+Default Ollama model:
+
+```text
+qwen3.5:4b
 ```
 
-语音转文字可选依赖：
-
-- `sherpa-onnx-node`
-- SenseVoice ONNX 模型
-- 如果微信语音不是 wav，还需要 `ffmpeg` 做格式转换
-
-## 安装依赖
-
-普通安装：
-
-```powershell
-npm install
-```
-
-国内网络可以临时使用镜像源：
-
-```powershell
-npm --registry=https://registry.npmmirror.com install
-```
-
-## 启动 Ollama
-
-先启动 Ollama 服务：
-
-```powershell
-ollama serve
-```
-
-如果你使用 Ollama 桌面版，打开 Ollama App 通常也会启动本地服务。
-
-确认服务可用：
-
-```powershell
-ollama list
-```
-
-默认 API 地址：
+Default Ollama API endpoint:
 
 ```text
 http://127.0.0.1:11434
 ```
 
-## 配置
+## Preparation
 
-可以通过环境变量覆盖默认模型和 Ollama 地址：
+You can either use the build scripts to prepare everything automatically, or configure the dependencies manually.
+
+### Option 1: Automatic Setup
+
+Run the build script for your platform:
+
+```sh
+./build.sh
+```
+
+or on Windows:
+
+```bat
+build.bat
+```
+
+This prepares Ollama, pulls the LLM model, downloads the speech recognition model, installs npm dependencies, and compiles the project.
+
+### Option 2: Manual Setup
+
+1. Install Node.js 20+ and make sure `node` and `npm` are in `PATH`.
+
+```sh
+node --version
+npm --version
+```
+
+2. Install Ollama and start the local API server.
+
+```sh
+ollama serve
+```
+
+If you use the Ollama desktop app, opening the app usually starts the local API server.
+
+3. Pull the chat model.
+
+```sh
+ollama pull qwen3.5:4b
+```
+
+4. Install ffmpeg and make sure it is in `PATH`.
+
+```sh
+ffmpeg -version
+```
+
+5. Download and extract the SenseVoice model.
+
+The final model files must be placed here:
+
+```text
+models/sherpa-onnx/model.int8.onnx
+models/sherpa-onnx/tokens.txt
+```
+
+6. Install npm dependencies.
+
+```sh
+npm install
+```
+
+or with the mirror used by the build scripts:
+
+```sh
+npm --registry=https://registry.npmmirror.com install
+```
+
+7. Build the project.
+
+```sh
+npm run build
+```
+
+### Configuration
+
+The default configuration works without environment variables if you use:
+
+```text
+Ollama URL: http://127.0.0.1:11434
+Ollama model: qwen3.5:4b
+SenseVoice model directory: models/sherpa-onnx/
+```
+
+To override Ollama settings:
+
+PowerShell:
 
 ```powershell
 $env:OLLAMA_MODEL="qwen3.5:4b"
 $env:OLLAMA_BASE_URL="http://127.0.0.1:11434"
 ```
 
-默认值：
+sh:
 
-```text
-OLLAMA_MODEL=qwen3.5:4b
-OLLAMA_BASE_URL=http://127.0.0.1:11434
+```sh
+export OLLAMA_MODEL="qwen3.5:4b"
+export OLLAMA_BASE_URL="http://127.0.0.1:11434"
 ```
 
-微信回复周期在 `src/main.ts` 中配置：
+To use a different npm registry during build:
 
-```ts
-const REPLY_INTERVAL_SECONDS = 10
+```sh
+export NPM_REGISTRY="https://registry.npmmirror.com"
 ```
 
-## 开发运行
+## Build Scripts
 
-直接运行 TypeScript：
-
-```powershell
-npm run dev
-```
-
-启动后会出现微信登录二维码，扫码登录即可。
-
-## 构建
-
-```powershell
-npm run build
-```
-
-构建产物会输出到：
-
-```text
-dist/
-```
-
-## 生产运行
-
-先构建：
-
-```powershell
-npm run build
-```
-
-再运行：
-
-```powershell
-npm run start
-```
-
-## 一键构建脚本
-
-Windows：
-
-```powershell
-.\build.bat
-```
-
-Linux/macOS：
+### Linux/macOS
 
 ```sh
 chmod +x ./build.sh
 ./build.sh
 ```
 
-这些脚本会尝试：
+`build.sh` does the following:
 
-1. 检查或安装 Ollama
-2. 启动 Ollama 服务
-3. 拉取 Ollama 模型
-4. 下载并解压 SenseVoice 语音转文字模型
-5. 安装 npm 依赖
-6. 编译项目
+1. Checks that `npm` exists.
+2. Installs Ollama with `https://ollama.com/install.sh` if `ollama` is missing.
+3. Starts `ollama serve` temporarily if the Ollama API is not already running.
+4. Pulls the Ollama model from `OLLAMA_MODEL`, or `qwen3.5:4b` by default.
+5. Downloads the SenseVoice ONNX model archive if it is missing.
+6. Extracts `model.int8.onnx` and `tokens.txt` into `models/sherpa-onnx/`.
+7. Installs npm dependencies using `NPM_REGISTRY`, or `https://registry.npmmirror.com` by default.
+8. Runs `npm run build`.
 
-## 语音转文字模型
+### Windows
 
-推荐使用：
+```bat
+build.bat
+```
+
+`build.bat` does the same setup as `build.sh`, but uses PowerShell to install/start Ollama and 7-Zip to extract the SenseVoice `.tar.bz2` archive.
+
+The build scripts compile the project only. They do not start the WeChat bot.
+
+## Manual Downloads
+
+### Ollama
+
+Download Ollama manually from:
+
+```text
+https://ollama.com/download
+```
+
+After installation, verify that it works:
+
+```sh
+ollama list
+```
+
+Pull the default model manually:
+
+```sh
+ollama pull qwen3.5:4b
+```
+
+You can use another model by setting `OLLAMA_MODEL`.
+
+### SenseVoice Model
+
+The speech recognition model used by this project is:
 
 ```text
 sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17
 ```
 
-默认模型目录：
+Manual download URL:
 
 ```text
-models/sherpa-onnx/
+https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2
 ```
 
-需要包含：
+Extract the archive and place these files here:
 
 ```text
-model.int8.onnx
-tokens.txt
+models/sherpa-onnx/model.int8.onnx
+models/sherpa-onnx/tokens.txt
 ```
 
-运行 `build.bat` 或 `build.sh` 时会自动下载并解压这个模型。
+On Windows, use 7-Zip if `tar` cannot extract `.tar.bz2` files.
 
-代码入口：
+### ffmpeg
 
-```ts
-import { AudioTranscriber } from "./util/AudioTranscriber.js"
+Install ffmpeg manually from:
 
-const transcriber = new AudioTranscriber()
-const text = await transcriber.transcribeFile("voice.wav")
+```text
+https://ffmpeg.org/download.html
 ```
 
-注意：当前工具类主要读取 wav。微信语音接入时，需要先把微信语音文件转换成 wav，再调用 `transcribeFile()`。
+Make sure `ffmpeg` is available in `PATH`:
 
-## 项目结构
+```sh
+ffmpeg -version
+```
+
+## Install Dependencies
+
+Normal npm install:
+
+```sh
+npm install
+```
+
+Use a temporary registry mirror:
+
+```sh
+npm --registry=https://registry.npmmirror.com install
+```
+
+## Run
+
+Start Ollama first if it is not already running:
+
+```sh
+ollama serve
+```
+
+Run the WeChat bot in development mode:
+
+```sh
+npm run dev
+```
+
+Scan the QR code printed in the terminal to log in.
+
+Build and run compiled JavaScript:
+
+```sh
+npm run build
+npm run start
+```
+
+## Console Test Mode
+
+Console mode uses the same Ollama client but does not start Wechaty:
+
+```sh
+npm run console
+```
+
+After building:
+
+```sh
+npm run build
+npm run start:console
+```
+
+Console input is read line by line. The agent replies every 5 seconds.
+
+## Audio Transcription Test
+
+After the SenseVoice model is installed:
+
+```sh
+npm run transcribe -- models/sherpa-onnx/test_wavs/zh.wav
+```
+
+You can also pass your own wav file:
+
+```sh
+npm run transcribe -- path/to/audio.wav
+```
+
+## Environment Variables
+
+```text
+OLLAMA_MODEL      Ollama model name. Defaults to qwen3.5:4b.
+OLLAMA_BASE_URL   Ollama API URL. Defaults to http://127.0.0.1:11434.
+NPM_REGISTRY      npm registry used by build scripts. Defaults to https://registry.npmmirror.com.
+```
+
+## Project Layout
 
 ```text
 src/
   agent/
     Agent.ts
+    ChatAgent.ts
     SingleClientAgent.ts
   client/
+    AudioRecognitionClient.ts
     Client.ts
     OllamaClient.ts
+    OpenAIClient.ts
     TestClient.ts
   stream/
     IOStream.ts
     StandardStream.ts
     WechatStream.ts
   util/
+    AudioTranscriber.ts
     Conversation.ts
     Misc.ts
-    AudioTranscriber.ts
   ConversationManager.ts
+  console.ts
   main.ts
+  transcribe.ts
 ```
 
-## 日志
+## Notes
 
-当前只保留 `WechatBot` 相关日志：
-
-```text
-[HH:MM:SS WechatBot/INFO]: Received from ...
-[HH:MM:SS WechatBot/INFO]: Sent to ...
-```
-
-## Git 忽略文件
-
-`.gitignore` 已排除：
-
-```text
-dist/
-.vscode/
-node_modules/
-wechat-bot.memory-card.json
-```
-
-## 常见问题
-
-如果出现：
-
-```text
-connect ECONNREFUSED 127.0.0.1:11434
-```
-
-说明 Ollama 服务没有启动。先运行：
-
-```powershell
-ollama serve
-```
-
-如果模型回复很慢，通常是显卡或 CPU 正在满载。可以换更小模型，或者缩短 prompt、限制模型输出长度。
+- WeChat text replies are split by punctuation before sending.
+- WeChat images, videos, and files are represented in the data model, but the current WeChat output stream only sends text replies.
+- Voice messages require ffmpeg conversion plus the SenseVoice model.
+- If Ollama replies slowly, the local model is usually CPU/GPU bound. Use a smaller model, shorten the prompt, or lower output limits.

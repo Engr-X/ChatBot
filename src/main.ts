@@ -15,7 +15,7 @@ import { wechatAudioMessageToWaveform } from "./util/Misc.js"
 
 
 const LOG_PREFIX: string = "WechatBot"
-const REPLY_INTERVAL_SECONDS = 1
+const REPLY_INTERVAL_SECONDS = 10
 const DEFAULT_SYSTEM_PROMPT = [
     "You are an auto-reply assistant for private WeChat conversations.",
     "",
