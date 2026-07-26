@@ -20,6 +20,8 @@ export const INPUT_TEXT = "text"
 export const INPUT_IMAGE = "image"
 export const INPUT_AUDIO = "audio"
 
+export const AUDIO_UNRECOGNIZED_TEXT = "[Unable to recognize audio]"
+
 
 export async function wechatAudioMessageToWaveform(message: WechatMessage): Promise<Waveform>
 {

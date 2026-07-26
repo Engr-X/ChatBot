@@ -2,6 +2,7 @@ import type { Client } from "../client/Client.js"
 import { AudioTranscriber } from "../util/AudioTranscriber.js"
 import { Message, TextData } from "../util/Conversation.js"
 import type { Data } from "../util/Conversation.js"
+import { AUDIO_UNRECOGNIZED_TEXT } from "../util/Misc.js"
 import type { IOStream } from "../stream/IOStream.js"
 import { SingleClientAgent } from "./SingleClientAgent.js"
 
@@ -67,6 +68,8 @@ export class ChatAgent extends SingleClientAgent
 
                 if (text.trim().length > 0)
                     message.addData(new TextData(VOICE_TRANSCRIPTION_PREFIX + text.trim()))
+                else
+                    message.addData(new TextData(AUDIO_UNRECOGNIZED_TEXT))
 
                 break
             }

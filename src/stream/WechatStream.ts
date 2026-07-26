@@ -17,16 +17,19 @@ export class WechatStream extends IOStream
     private readonly contactId: string
     private readonly queue: Data[]
     private readonly readers: ReadResolver[]
+    private readonly replyPrefix: string
     private closed: boolean
 
 
-    constructor(bot: WechatyInterface, contactId: string)
+    // constructor(bot: WechatyInterface, contactId: string, replyPrefix: string = "[AI 回复]: ")
+    constructor(bot: WechatyInterface, contactId: string, replyPrefix: string = "")
     {
         super()
         this.bot = bot
         this.contactId = contactId
         this.queue = []
         this.readers = []
+        this.replyPrefix = replyPrefix
         this.closed = false
     }
 
@@ -72,34 +75,26 @@ export class WechatStream extends IOStream
         if (!contact)
             throw new Error(`Contact not found: ${this.contactId}`)
 
-        const messages = this.formatOutput(output)
-
-        for (const message of messages)
-        {
-            await contact.say(message)
-            log.info(LOG_PREFIX, "Sent to %s <%s>: %s", contact.name(), contact.id, message)
-        }
-    }
-
-
-    private formatOutput(output: Data): string[]
-    {
         switch (output.type)
         {
             case "text":
-                return splitReplyMessages(output.text)
+            {
+                const messages = splitReplyMessages(output.text)
+
+                for (const message of messages)
+                {
+                    await contact.say(this.replyPrefix + message)
+                    log.info(LOG_PREFIX, "Sent to %s <%s>: %s", contact.name(), contact.id, message)
+                }
+
+                break
+            }
 
             case "image_url":
-                return [`[image: ${output.image_url.url}]`]
-
             case "video_url":
-                return [`[video: ${output.video_url.url}]`]
-
             case "input_audio":
-                return [`[audio: ${output.input_audio.format}]`]
-
             case "input_file":
-                return [`[file: ${output.file_url}]`]
+                break
         }
     }
 
