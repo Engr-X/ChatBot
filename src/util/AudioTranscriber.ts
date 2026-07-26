@@ -66,8 +66,7 @@ export type AudioTranscriberOptions = {
 const require = createRequire(import.meta.url)
 const sherpaOnnx = require("sherpa-onnx-node") as SherpaOnnx
 
-const DEFAULT_MODEL_NAME = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17"
-const DEFAULT_MODEL_DIR = join(process.cwd(), "models", DEFAULT_MODEL_NAME)
+const DEFAULT_MODEL_DIR = join(process.cwd(), "models", "sherpa-onnx")
 const DEFAULT_MODEL_FILE = "model.int8.onnx"
 const DEFAULT_TOKENS_FILE = "tokens.txt"
 const DEFAULT_SAMPLE_RATE = 16000
