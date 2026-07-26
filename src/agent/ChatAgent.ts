@@ -1,78 +1,81 @@
 import type { Client } from "../client/Client.js"
-import { AudioTranscriber } from "../util/AudioTranscriber.js"
-import { Message, TextData } from "../util/Conversation.js"
-import type { Data } from "../util/Conversation.js"
-import { AUDIO_UNRECOGNIZED_TEXT } from "../util/Misc.js"
+import { Conversation, Message } from "../util/Conversation.js"
 import type { IOStream } from "../stream/IOStream.js"
-import { SingleClientAgent } from "./SingleClientAgent.js"
+import { Agent } from "./Agent.js"
 
 
-const VOICE_TRANSCRIPTION_PREFIX = "[Voice transcription] "
-
-
-export class ChatAgent extends SingleClientAgent
+export class ChatAgent extends Agent
 {
-    private readonly audioTranscriber: AudioTranscriber
+    private readonly audioClient: Client
+    private readonly replyClient: Client
+    private readonly conversation: Conversation
 
 
     constructor(
         name: string,
         stream: IOStream,
-        client: Client,
+        replyClient: Client,
+        audioClient: Client,
         timeIntervalSeconds: number,
-        audioTranscriber: AudioTranscriber = new AudioTranscriber(),
     )
     {
-        super(name, stream, client, timeIntervalSeconds)
-        this.audioTranscriber = audioTranscriber
+        super(name, stream, [replyClient, audioClient], timeIntervalSeconds)
+
+        if (audioClient.getConversation() !== replyClient.getConversation())
+            throw new Error("ChatAgent clients must share one Conversation")
+
+        this.replyClient = replyClient
+        this.audioClient = audioClient
+        this.conversation = replyClient.getConversation()
     }
 
 
     override async getResponse(message: Message): Promise<Message | null>
     {
-        return super.getResponse(await this.prepareMessage(message))
-    }
+        this.conversation.addMessage(message)
 
+        let convertedMessage: Message | null = null
 
-    private async prepareMessage(message: Message): Promise<Message>
-    {
-        const serialized = message.serialize()
-        const preparedMessage = new Message(serialized.role)
-
-        for (const data of serialized.content)
-            await this.addPreparedData(preparedMessage, data)
-
-        return preparedMessage
-    }
-
-
-    private async addPreparedData(message: Message, data: Data): Promise<void>
-    {
-        switch (data.type)
+        try
         {
-            case "text":
-            case "image_url":
-            case "video_url":
-            case "input_file":
+            convertedMessage = await this.audioClient.getReply()
+
+            if (!convertedMessage)
             {
-                message.addData(data)
-                break
+                this.conversation.removeLastMessage(message)
+                return null
             }
 
-            case "input_audio":
+            this.replaceLastMessage(message, convertedMessage)
+
+            const reply: Message | null = await this.replyClient.getReply()
+
+            if (!reply)
             {
-                const text = await this.audioTranscriber.transcribeSamples(
-                    data.input_audio.samples,
-                    data.input_audio.sampleRate,
-                )
-
-                if (text.trim().length > 0)
-                    message.addData(new TextData(VOICE_TRANSCRIPTION_PREFIX + text.trim()))
-                else
-                    message.addData(new TextData(AUDIO_UNRECOGNIZED_TEXT))
-
-                break
+                this.conversation.removeLastMessage(convertedMessage)
+                return null
             }
+
+            this.replyClient.addAssistantMessage(reply)
+            return reply
         }
+        catch (error)
+        {
+            if (convertedMessage)
+                this.conversation.removeLastMessage(convertedMessage)
+            else
+                this.conversation.removeLastMessage(message)
+
+            throw error
+        }
+    }
+
+
+    private replaceLastMessage(oldMessage: Message, newMessage: Message): void
+    {
+        if (!this.conversation.removeLastMessage(oldMessage))
+            throw new Error("Failed to replace latest message")
+
+        this.conversation.addMessage(newMessage)
     }
 }

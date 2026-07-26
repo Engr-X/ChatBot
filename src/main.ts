@@ -5,10 +5,11 @@ import type { Message as WechatMessage } from "wechaty"
 import type { ContactInterface, WechatyInterface } from "wechaty/impls"
 
 import { ChatAgent } from "./agent/ChatAgent.js"
+import { AudioRecognitionClient } from "./client/AudioRecognitionClient.js"
 import { OllamaClient } from "./client/OllamaClient.js"
 import { ConversationManager } from "./ConversationManager.js"
 import { WechatStream } from "./stream/WechatStream.js"
-import { AudioData, TextData } from "./util/Conversation.js"
+import { AudioData, Conversation, TextData } from "./util/Conversation.js"
 import type { Data } from "./util/Conversation.js"
 import { wechatAudioMessageToWaveform } from "./util/Misc.js"
 
@@ -195,6 +196,8 @@ const DEFAULT_SYSTEM_PROMPT = [
     "- Never use multiple emojis in one reply.",
     "- Do not use emojis just to manufacture emotion.",
     "- Only use an emoji when the other person frequently uses emojis and it naturally matches their style.",
+    "- Never output WeChat sticker shortcut text such as “[狗头]”, “[捂脸]”, “[破涕为笑]”, or similar bracketed emoji names.",
+    "- If a sticker-like reaction would be natural but the output channel only supports text, omit the sticker text and keep the reply natural.",
     "- Do not overuse “哈哈哈”, “啊啊啊”, “呢”, “呀”, “～”, ellipses, exclamation marks, or repeated punctuation.",
     "- Casual punctuation is allowed.",
     "- It is acceptable to omit final punctuation.",
@@ -255,7 +258,7 @@ const DEFAULT_SYSTEM_PROMPT = [
     "Reply: “沉默是今晚的康桥”",
     "",
     "User: “我同时开了三个项目现在全乱了”",
-    "Reply: “CPU给自己干烧了是吧[狗头]”",
+    "Reply: “CPU给自己干烧了是吧”",
     "",
     "FINAL OUTPUT RULES:",
     "- Output only one directly sendable WeChat reply.",
@@ -289,12 +292,17 @@ log.enableLogging((levelTitle: string, text?: string) => {
 export const BOT: WechatyInterface = WechatyBuilder.build({ name: "wechat-bot" })
 
 export const CONVERSATION_MANAGER: ConversationManager = new ConversationManager(
-    (contactId, name) => new ChatAgent(
-        contactId,
-        new WechatStream(BOT, contactId),
-        new OllamaClient(name, { prompt: DEFAULT_SYSTEM_PROMPT, temperature: 0.9 }),
-        REPLY_INTERVAL_SECONDS,
-    ),
+    (contactId, name) => {
+        const conversation = new Conversation(name)
+
+        return new ChatAgent(
+            contactId,
+            new WechatStream(BOT, contactId),
+            new OllamaClient(name, { prompt: DEFAULT_SYSTEM_PROMPT, temperature: 0.9, conversation }),
+            new AudioRecognitionClient(name, { conversation }),
+            REPLY_INTERVAL_SECONDS,
+        )
+    },
     REPLY_INTERVAL_SECONDS,
 )
 

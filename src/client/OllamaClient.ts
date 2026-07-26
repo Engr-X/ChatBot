@@ -11,6 +11,7 @@ type OllamaClientOptions = {
     model?: string
     prompt?: string
     temperature?: number
+    conversation?: Conversation
 }
 
 
@@ -27,7 +28,7 @@ export class OllamaClient extends Client
     
     constructor(oppositeName: string, options: OllamaClientOptions = {})
     {
-        super(oppositeName, options.prompt)
+        super(oppositeName, options.prompt, options.conversation)
         this.baseUrl = options.baseUrl ?? process.env.OLLAMA_BASE_URL ?? DEFAULT_BASE_URL
         this.model = options.model ?? process.env.OLLAMA_MODEL ?? DEFAULT_MODEL
         this.temperature = options.temperature
