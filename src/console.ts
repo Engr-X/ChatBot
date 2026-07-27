@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import process from "node:process"
 
 import { SingleClientAgent } from "./agent/SingleClientAgent.js"

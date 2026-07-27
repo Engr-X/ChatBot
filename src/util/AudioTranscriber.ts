@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import { existsSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join, resolve } from "node:path"

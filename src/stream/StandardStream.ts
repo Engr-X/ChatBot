@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import { stdin, stdout } from "node:process"
 import { createInterface } from "node:readline"
 import { TextData } from "../util/Conversation.js"

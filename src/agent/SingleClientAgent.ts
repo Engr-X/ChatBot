@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import { OllamaClient } from "../client/OllamaClient.js"
 import { STANDARD_STREAM } from "../stream/StandardStream.js"
 import { Agent } from "./Agent.js"

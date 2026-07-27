@@ -1,7 +1,28 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import type { Agent } from "./agent/Agent.js"
 import type { Data } from "./util/Conversation.js"
+import { log } from "brolog"
 
 
+const LOG_PREFIX = "WechatBot"
 const DEFAULT_TIME_INTERVAL_SECONDS = 10
 
 type AgentFactory = (conversationId: string, name: string) => Agent
@@ -104,7 +125,7 @@ export class ConversationManager
                 continue
 
             pair[1] = false
-            tasks.push(this.runAgent(pair))
+            tasks.push(this.runAgent(conversationId, pair))
         }
 
         await Promise.all(tasks)
@@ -117,7 +138,7 @@ export class ConversationManager
     }
 
 
-    private async runAgent(pair: [Agent, boolean]): Promise<void>
+    private async runAgent(conversationId: string, pair: [Agent, boolean]): Promise<void>
     {
         const agent = pair[0]
 
@@ -126,11 +147,15 @@ export class ConversationManager
             const success = await agent.runOnce()
 
             if (!success)
+            {
                 pair[1] = true
+                log.warn(LOG_PREFIX, "No reply generated for %s; will retry", conversationId)
+            }
         }
-        catch
+        catch (error)
         {
             pair[1] = true
+            log.error(LOG_PREFIX, "Failed to reply to %s: %s", conversationId, error)
         }
     }
 }

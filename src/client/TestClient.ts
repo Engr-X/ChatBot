@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import { Client } from "./Client.js"
 import { Message, TextData } from "../util/Conversation.js"
 import { ROLE_ASSISTANT } from "../util/Misc.js"

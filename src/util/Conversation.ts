@@ -1,4 +1,66 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import { ROLES } from "./Misc.js"
+
+
+/**
+ * Number of milliseconds between UTC and UTC+8.
+ */
+const UTC_8_OFFSET_MS = 8 * 60 * 60 * 1000
+
+
+/**
+ * Pads one date/time field to two digits.
+ *
+ * @param value             numeric date/time field
+ *
+ * @return                  two-digit string representation of the field
+ */
+function padDateField(value: number): string
+{
+    return value.toString().padStart(2, "0")
+}
+
+
+/**
+ * Formats a date as a UTC+8 timestamp.
+ *
+ * The returned value is stable and independent from the machine's local time
+ * zone. It uses the format {@code YYYY-MM-DD HH:mm:ss}.
+ *
+ * @param date              source date object
+ *
+ * @return                  formatted UTC+8 timestamp
+ */
+function formatUtc8Time(date: Date): string
+{
+    const utc8Date = new Date(date.getTime() + UTC_8_OFFSET_MS)
+    const year = utc8Date.getUTCFullYear()
+    const month = padDateField(utc8Date.getUTCMonth() + 1)
+    const day = padDateField(utc8Date.getUTCDate())
+    const hours = padDateField(utc8Date.getUTCHours())
+    const minutes = padDateField(utc8Date.getUTCMinutes())
+    const seconds = padDateField(utc8Date.getUTCSeconds())
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
 
 
 /**
@@ -20,7 +82,7 @@ export class TextData
     /**
      * Discriminator identifying this object as text data.
      */
-    readonly type: string = "text"
+    readonly type = "text"
 
 
     /**
@@ -234,16 +296,27 @@ export class Message
      */
     private readonly content: Data[]
 
+    /**
+     * Creation time of this message.
+     *
+     * The stored value is an absolute JavaScript {@link Date}. Use
+     * {@link getTime} to read it as a UTC+8 display timestamp.
+     */
+    private readonly createdAt: Date
+
 
     /**
      * Constructs an empty message for the specified role.
      *
      * @param role              the system, user, or assistant role associated with this message
+     *
+     * @param createdAt         absolute creation time of the message; defaults to the current time
      */
-    constructor(role: Role)
+    constructor(role: Role, createdAt: Date = new Date())
     {
         this.role = role
         this.content = []
+        this.createdAt = new Date(createdAt.getTime())
     }
 
 
@@ -288,6 +361,28 @@ export class Message
 
 
     /**
+     * Returns the message creation time as a UTC+8 timestamp.
+     *
+     * @return                  formatted UTC+8 time in {@code YYYY-MM-DD HH:mm:ss}
+     */
+    getTime(): string
+    {
+        return formatUtc8Time(this.createdAt)
+    }
+
+
+    /**
+     * Returns a copy of the absolute creation time.
+     *
+     * @return                  copied {@link Date} object
+     */
+    getCreatedAt(): Date
+    {
+        return new Date(this.createdAt.getTime())
+    }
+
+
+    /**
      * Serializes this message into a JSON string.
      *
      * @return                  a JSON string containing the message role and content
@@ -310,11 +405,12 @@ export class Message
      * However, individual {@link Data} objects inside the array are not deeply
      * copied and remain the same object references.
      *
-     * @return                  an object containing the message role and a shallow copy of its content
+     * @return                  an object containing the message role, UTC+8 time, and a shallow copy
+     *                          of its content
      */
     serialize()
     {
-        return { role: this.role, content: [...this.content] }
+        return { role: this.role, time: this.getTime(), content: [...this.content] }
     }
 }
 

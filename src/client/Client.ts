@@ -1,4 +1,24 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import { Conversation } from "../util/Conversation.js"
+
 import type { Message } from "../util/Conversation.js"
 
 
@@ -109,6 +129,17 @@ export abstract class Client
             `The person on the other side is named: ${this.oppositeName}.`,
             this.prompt,
         ].filter(part => part.trim().length > 0).join(" ")
+    }
+
+
+    /**
+     * Returns the display name of the person on the other side.
+     *
+     * @returns                 Opposite participant display name.
+     */
+    protected getOppositeName(): string
+    {
+        return this.oppositeName
     }
 
 

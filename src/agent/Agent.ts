@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import { Client } from "../client/Client.js"
 import { Message } from "../util/Conversation.js"
 import { ROLE_USER } from "../util/Misc.js"
@@ -319,10 +338,13 @@ export abstract class Agent
             this.restoreMessage(message)
             return false
         }
-        catch
+        catch (error)
         {
             if (!response)
+            {
                 this.restoreMessage(message)
+                throw error
+            }
 
             return response !== null
         }

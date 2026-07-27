@@ -1,7 +1,26 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import process from "node:process"
 
 import { Conversation, Message, TextData } from "../util/Conversation.js"
-import { ROLE_ASSISTANT, ROLE_SYSTEM, ROLES } from "../util/Misc.js"
+import { ROLE_ASSISTANT, ROLE_SYSTEM, ROLE_USER, ROLES } from "../util/Misc.js"
 import { Client } from "./Client.js"
 
 import type { Data } from "../util/Conversation.js"
@@ -79,6 +98,11 @@ const DEFAULT_BASE_URL = "http://127.0.0.1:11434"
  * environment variables provide a model name.
  */
 const DEFAULT_MODEL = "qwen3.5:4b"
+
+/**
+ * Text prefix produced by AudioRecognitionClient for transcribed voice input.
+ */
+const AUDIO_TRANSCRIPTION_PREFIX = "[User sent a voice message. Transcription]: "
 
 
 /**
@@ -262,9 +286,12 @@ export class OllamaClient extends Client
 
         for (const message of conversation.serialize().content)
         {
-            const content: string = this.converter(message.content).trim()
+            if (!this.isRole(message.role))
+                continue
 
-            if (!this.isRole(message.role) || content.length === 0)
+            const content: string = this.converter(message.time, message.role, message.content).trim()
+
+            if (content.length === 0)
                 continue
 
             messages.push({
@@ -297,7 +324,7 @@ export class OllamaClient extends Client
      * @returns                 A string containing all text items joined by newline characters.
      *                          Returns an empty string when the message contains no text items.
      */
-    private converter(content: Data[]): string
+    private converter(time: string, role: typeof ROLES[number], content: Data[]): string
     {
         const texts: string[] = []
 
@@ -307,7 +334,11 @@ export class OllamaClient extends Client
             {
                 case "text":
                 {
-                    texts.push(data.text)
+                    const text = data.text.trim()
+
+                    if (text.length > 0)
+                        texts.push(this.formatTextData(time, role, text))
+
                     break
                 }
 
@@ -320,6 +351,52 @@ export class OllamaClient extends Client
         }
 
         return texts.join("\n")
+    }
+
+
+    /**
+     * Formats one text-like data item with message metadata for the model.
+     */
+    private formatTextData(time: string, role: typeof ROLES[number], text: string): string
+    {
+        const speaker = this.getSpeakerName(role)
+        const audioTranscript = this.extractAudioTranscript(text)
+
+        if (audioTranscript !== null)
+            return `[${time} ${speaker}/audio transcript]: ${audioTranscript}`
+
+        return `[${time} ${speaker}/text]: ${text}`
+    }
+
+
+    /**
+     * Returns the display name used in formatted model context.
+     */
+    private getSpeakerName(role: typeof ROLES[number]): string
+    {
+        switch (role)
+        {
+            case ROLE_USER:
+                return this.getOppositeName()
+
+            case ROLE_ASSISTANT:
+                return "assistant"
+
+            case ROLE_SYSTEM:
+                return "system"
+        }
+    }
+
+
+    /**
+     * Extracts speech-recognition text from the audio transcription marker.
+     */
+    private extractAudioTranscript(text: string): string | null
+    {
+        if (!text.startsWith(AUDIO_TRANSCRIPTION_PREFIX))
+            return null
+
+        return text.slice(AUDIO_TRANSCRIPTION_PREFIX.length).trim()
     }
 
 

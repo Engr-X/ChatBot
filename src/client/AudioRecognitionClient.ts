@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import { AudioTranscriber } from "../util/AudioTranscriber.js"
 import { Message, TextData } from "../util/Conversation.js"
 import { AUDIO_UNRECOGNIZED_TEXT } from "../util/Misc.js"

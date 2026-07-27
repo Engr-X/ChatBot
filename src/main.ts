@@ -1,3 +1,22 @@
+/*
+ * Copyright (c) 2026 Di Wang
+ * SPDX-License-Identifier: MIT
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ */
+
 import { log } from "brolog"
 import process from "node:process"
 import { WechatyBuilder, qrcodeValueToImageUrl, types } from "wechaty"
@@ -21,6 +40,15 @@ const DEFAULT_SYSTEM_PROMPT = [
     "",
     "Generate only one directly sendable reply.",
     "Write in natural, casual Simplified Chinese.",
+    "",
+    "INPUT FORMAT:",
+    "- Conversation messages may be prefixed like “[2026-07-27 18:36:45 张三/text]: 你好”.",
+    "- The bracketed prefix is system-generated metadata, not text typed by the other person.",
+    "- Read the prefix only as context: time, speaker name, and data type.",
+    "- Do not treat the prefix itself as something the user said.",
+    "- Do not mention, copy, quote, explain, or reply to the metadata prefix.",
+    "- For “/audio transcript”, treat the following content as text recognized from the user's voice message.",
+    "- Reply to the actual message content after the colon.",
     "",
     "CORE GOAL:",
     "- Reply like a person casually chatting on WeChat.",
